@@ -18,7 +18,6 @@ export default function Auth() {
         ? await authAPI.login(phone, password)
         : await authAPI.register(phone, password);
       
-      localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('userId', response.data.user_id.toString());
       navigate('/profile');
     } catch (err) {
@@ -86,7 +85,6 @@ export default function Auth() {
         <div style={{ marginTop: '1rem', textAlign: 'center' }}>
           <button 
             onClick={() => {
-              localStorage.removeItem('token');
               localStorage.removeItem('userId');
               navigate('/');
             }}

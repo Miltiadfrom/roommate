@@ -1,18 +1,16 @@
 """
 FastAPI приложение для Roommate Finder
 """
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, Header
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import List, Optional, Dict
-import jwt
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from models import User, Profile, Swipe, Match, Message, CompatibilityResult
 from database import db
 from algorithms import compatibility_calculator
-from config import JWT_SECRET_KEY, JWT_ALGORITHM, JWT_EXPIRATION_MINUTES, CORS_ORIGINS
+from config import CORS_ORIGINS
 
 app = FastAPI(title="Roommate Finder API", version="1.0.0")
 
@@ -24,9 +22,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Security
-security = HTTPBearer()
 
 
 # === Pydantic модели ===
@@ -75,27 +70,19 @@ class MessageSend(BaseModel):
 
 
 # === Утилиты ===
-def create_access_token(user_id: int) -> str:
-    """Создание JWT токена"""
-    expire = datetime.utcnow() + timedelta(minutes=JWT_EXPIRATION_MINUTES)
-    to_encode = {"sub": str(user_id), "exp": expire}
-    return jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
-
-
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> User:
-    """Получение текущего пользователя из токена"""
+async def get_current_user(x_user_id: Optional[str] = Header(None)) -> User:
+    """Получение текущего пользователя по user_id из заголовка"""
+    if not x_user_id:
+        raise HTTPException(status_code=401, detail="User ID required")
+    
     try:
-        token = credentials.credentials
-        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        user_id = int(payload.get("sub"))
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
+        user_id = int(x_user_id)
         user = db.get_user(user_id)
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
         return user
-    except jwt.PyJWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid user ID")
 
 
 # === Auth endpoints ===
@@ -110,8 +97,7 @@ async def register(data: UserRegister):
     profile = Profile(user_id=user_id)
     db.save_profile(profile)
     
-    token = create_access_token(user_id)
-    return {"access_token": token, "user_id": user_id}
+    return {"user_id": user_id}
 
 
 @app.post("/api/auth/login")
@@ -121,8 +107,7 @@ async def login(data: UserLogin):
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    token = create_access_token(user.id)
-    return {"access_token": token, "user_id": user.id}
+    return {"user_id": user.id}
 
 
 # === Profile endpoints ===
