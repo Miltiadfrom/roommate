@@ -1,42 +1,44 @@
 ```
-# Database files
-*.db
-
-# Environment files
-.env
-.env.local
-*.env.*
-
-# Dependencies
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
+# Dependencies
+node_modules/
+.venv/
+venv/
+.env
+.env.local
+*.env.*
+
+# Database
+web/data/roommate_finder.db
+
 # Logs
 *.log
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
 
 # OS generated files
 .DS_Store
 Thumbs.db
 
-# IDE files
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# IDE specific
 .vscode/
 .idea/
-*.swp
-*.swo
 
 # Build artifacts
 dist/
 build/
-*.egg-info/
-
-# Coverage reports
-.coverage
-coverage/
-htmlcov/
-
-# Python cache
-.mypy_cache/
-.pytest_cache/
+target/
 ```
