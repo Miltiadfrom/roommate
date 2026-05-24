@@ -4,39 +4,45 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
-# Database
-*.db
+*.py~
+*.pyc~
+*.pyo~
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # Environment
+.ENV
 .env
-.env.local
-*.env.*
-
-# Dependencies
+.env.*
+!.env.example
 .venv/
 venv/
-node_modules/
+env/
+ENV/
 
-# Build artifacts
-dist/
-build/
-target/
-
-# Logs
-*.log
-
-# Editor/IDE
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *.tmp
 
-# Coverage
-.coverage
-coverage/
-htmlcov/
+# Logs
+*.log
 
 # OS
 .DS_Store
