@@ -105,23 +105,26 @@ def seed_database():
     # cursor.execute("DELETE FROM profiles")
     # cursor.execute("DELETE FROM users")
 
-    # 1. Создаем пользователей
+    # 1. Создаем пользователей (используем phone как логин)
     users_data = [
-        ("alice", "alice@example.com", hash_password("123456"), "active"),
-        ("bob", "bob@example.com", hash_password("123456"), "active"),
-        ("charlie", "charlie@example.com", hash_password("123456"), "active"),
-        ("diana", "diana@example.com", hash_password("123456"), "active"),
-        ("eve", "eve@example.com", hash_password("123456"), "active"),
-        ("frank", "frank@example.com", hash_password("123456"), "active"),
+        ("+79001112233", hash_password("123456"), "active"),  # alice
+        ("+79001112234", hash_password("123456"), "active"),  # bob
+        ("+79001112235", hash_password("123456"), "active"),  # charlie
+        ("+79001112236", hash_password("123456"), "active"),  # diana
+        ("+79001112237", hash_password("123456"), "active"),  # eve
+        ("+79001112238", hash_password("123456"), "active"),  # frank
     ]
 
     user_ids = {}
-    for username, email, pwd_hash, status in users_data:
+    user_phones = ["+79001112233", "+79001112234", "+79001112235", "+79001112236", "+79001112237", "+79001112238"]
+    usernames = ["alice", "bob", "charlie", "diana", "eve", "frank"]
+    
+    for i, (phone, pwd_hash, status) in enumerate(users_data):
         cursor.execute(
-            "INSERT INTO users (username, email, password_hash, status) VALUES (?, ?, ?, ?)",
-            (username, email, pwd_hash, status)
+            "INSERT INTO users (phone, password_hash, created_at, is_active) VALUES (?, ?, ?, ?)",
+            (phone, pwd_hash, datetime.now().isoformat(), 1 if status == "active" else 0)
         )
-        user_ids[username] = cursor.lastrowid
+        user_ids[usernames[i]] = cursor.lastrowid
 
     print(f"Создано пользователей: {len(user_ids)}")
 
