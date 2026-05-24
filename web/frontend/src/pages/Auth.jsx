@@ -82,6 +82,19 @@ export default function Auth() {
             </>
           )}
         </div>
+
+        <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+          <button 
+            onClick={() => {
+              localStorage.removeItem('token');
+              localStorage.removeItem('userId');
+              navigate('/');
+            }}
+            style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', textDecoration: 'underline' }}
+          >
+            Выйти из профиля
+          </button>
+        </div>
       </div>
     </div>
   );
