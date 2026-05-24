@@ -1,14 +1,13 @@
 import sqlite3
 from datetime import datetime, timedelta
-from passlib.context import CryptContext
+import hashlib
 import random
 
 # Настройки
 DB_PATH = "roommate.db"
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return hashlib.sha256(password.encode()).hexdigest()
 
 def create_tables():
     """Создает все необходимые таблицы в базе данных"""
@@ -64,7 +63,7 @@ def create_tables():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
             target_user_id INTEGER NOT NULL,
-            is_like BOOLEAN NOT NULL,
+            direction TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (target_user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -91,7 +90,7 @@ def create_tables():
             sender_id INTEGER NOT NULL,
             receiver_id INTEGER NOT NULL,
             content TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             is_read BOOLEAN DEFAULT FALSE,
             FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
@@ -174,49 +173,49 @@ def seed_database():
     
     # Мэтч между Alice и Bob (взаимные лайки)
     # Alice likes Bob
-    cursor.execute("INSERT INTO swipes (user_id, target_user_id, is_like, created_at) VALUES (?, ?, ?, ?)",
-                   (user_ids["alice"], user_ids["bob"], 1, now))
+    cursor.execute("INSERT OR REPLACE INTO swipes (user_id, target_user_id, direction, created_at) VALUES (?, ?, ?, ?)",
+                   (user_ids["alice"], user_ids["bob"], "right", now.isoformat()))
     # Bob likes Alice
-    cursor.execute("INSERT INTO swipes (user_id, target_user_id, is_like, created_at) VALUES (?, ?, ?, ?)",
-                   (user_ids["bob"], user_ids["alice"], 1, now - timedelta(hours=1)))
+    cursor.execute("INSERT OR REPLACE INTO swipes (user_id, target_user_id, direction, created_at) VALUES (?, ?, ?, ?)",
+                   (user_ids["bob"], user_ids["alice"], "right", (now - timedelta(hours=1)).isoformat()))
     # Создаем мэтч
-    cursor.execute("INSERT INTO matches (user1_id, user2_id, created_at) VALUES (?, ?, ?)",
-                   (user_ids["alice"], user_ids["bob"], now))
+    cursor.execute("INSERT OR REPLACE INTO matches (user1_id, user2_id, created_at) VALUES (?, ?, ?)",
+                   (user_ids["alice"], user_ids["bob"], now.isoformat()))
     
     # Мэтч между Alice и Eve (взаимные лайки)
-    cursor.execute("INSERT INTO swipes (user_id, target_user_id, is_like, created_at) VALUES (?, ?, ?, ?)",
-                   (user_ids["alice"], user_ids["eve"], 1, now - timedelta(days=1)))
-    cursor.execute("INSERT INTO swipes (user_id, target_user_id, is_like, created_at) VALUES (?, ?, ?, ?)",
-                   (user_ids["eve"], user_ids["alice"], 1, now - timedelta(days=1, hours=2)))
-    cursor.execute("INSERT INTO matches (user1_id, user2_id, created_at) VALUES (?, ?, ?)",
-                   (user_ids["alice"], user_ids["eve"], now - timedelta(days=1)))
+    cursor.execute("INSERT OR REPLACE INTO swipes (user_id, target_user_id, direction, created_at) VALUES (?, ?, ?, ?)",
+                   (user_ids["alice"], user_ids["eve"], "right", (now - timedelta(days=1)).isoformat()))
+    cursor.execute("INSERT OR REPLACE INTO swipes (user_id, target_user_id, direction, created_at) VALUES (?, ?, ?, ?)",
+                   (user_ids["eve"], user_ids["alice"], "right", (now - timedelta(days=1, hours=2)).isoformat()))
+    cursor.execute("INSERT OR REPLACE INTO matches (user1_id, user2_id, created_at) VALUES (?, ?, ?)",
+                   (user_ids["alice"], user_ids["eve"], (now - timedelta(days=1)).isoformat()))
 
     # Charlie лайкает Diana, но без ответа (нет мэтча)
-    cursor.execute("INSERT INTO swipes (user_id, target_user_id, is_like, created_at) VALUES (?, ?, ?, ?)",
-                   (user_ids["charlie"], user_ids["diana"], 1, now))
+    cursor.execute("INSERT OR REPLACE INTO swipes (user_id, target_user_id, direction, created_at) VALUES (?, ?, ?, ?)",
+                   (user_ids["charlie"], user_ids["diana"], "right", now.isoformat()))
     
     # Frank лайкает всех, но ему никто не лайкнул в ответ
     for uid in [user_ids["alice"], user_ids["bob"], user_ids["diana"]]:
-        cursor.execute("INSERT INTO swipes (user_id, target_user_id, is_like, created_at) VALUES (?, ?, ?, ?)",
-                       (user_ids["frank"], uid, 1, now))
+        cursor.execute("INSERT OR REPLACE INTO swipes (user_id, target_user_id, direction, created_at) VALUES (?, ?, ?, ?)",
+                       (user_ids["frank"], uid, "right", now.isoformat()))
 
     print("Свайпы и мэтчи созданы.")
 
     # 4. Добавляем сообщения в чат между Alice и Bob
     messages = [
-        (user_ids["alice"], user_ids["bob"], "Привет! Я увидела твой профиль, нам нравится один район.", now - timedelta(minutes=30)),
-        (user_ids["bob"], user_ids["alice"], "Привет, Алиса! Да, Центр очень удобен для работы. Ты давно ищешь соседа?", now - timedelta(minutes=25)),
-        (user_ids["alice"], user_ids["bob"], "Пару дней. Важно, чтобы человек был аккуратным. Как у тебя с этим?", now - timedelta(minutes=20)),
-        (user_ids["bob"], user_ids["alice"], "Я довольно чистоплотен, убираюсь по выходным. А ты любишь гостей?", now - timedelta(minutes=15)),
-        (user_ids["alice"], user_ids["bob"], "Редко, в основном тихие вечера. Может встретимся посмотреть квартиру?", now - timedelta(minutes=10)),
-        (user_ids["bob"], user_ids["alice"], "Отличная идея! Я свободен завтра после 18:00.", now - timedelta(minutes=5)),
+        (user_ids["alice"], user_ids["bob"], "Привет! Я увидела твой профиль, нам нравится один район.", (now - timedelta(minutes=30)).isoformat()),
+        (user_ids["bob"], user_ids["alice"], "Привет, Алиса! Да, Центр очень удобен для работы. Ты давно ищешь соседа?", (now - timedelta(minutes=25)).isoformat()),
+        (user_ids["alice"], user_ids["bob"], "Пару дней. Важно, чтобы человек был аккуратным. Как у тебя с этим?", (now - timedelta(minutes=20)).isoformat()),
+        (user_ids["bob"], user_ids["alice"], "Я довольно чистоплотен, убираюсь по выходным. А ты любишь гостей?", (now - timedelta(minutes=15)).isoformat()),
+        (user_ids["alice"], user_ids["bob"], "Редко, в основном тихие вечера. Может встретимся посмотреть квартиру?", (now - timedelta(minutes=10)).isoformat()),
+        (user_ids["bob"], user_ids["alice"], "Отличная идея! Я свободен завтра после 18:00.", (now - timedelta(minutes=5)).isoformat()),
     ]
 
     for sender_id, receiver_id, text, timestamp in messages:
         cursor.execute("""
-            INSERT INTO messages (sender_id, receiver_id, content, created_at, is_read)
+            INSERT INTO messages (sender_id, receiver_id, content, timestamp, is_read)
             VALUES (?, ?, ?, ?, ?)
-        """, (sender_id, receiver_id, text, timestamp, 1 if timestamp < now - timedelta(minutes=10) else 0))
+        """, (sender_id, receiver_id, text, timestamp, 1 if timestamp < (now - timedelta(minutes=10)).isoformat() else 0))
 
     print("Сообщения добавлены.")
 
