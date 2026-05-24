@@ -88,6 +88,16 @@ export default function Profile() {
           <button onClick={() => navigate('/swipe')}>Поиск</button>
           <button onClick={() => navigate('/messages')}>Сообщения</button>
           <button onClick={() => navigate('/matches')}>Матчи</button>
+          <button 
+            onClick={() => {
+              localStorage.removeItem('token');
+              localStorage.removeItem('userId');
+              navigate('/login');
+            }}
+            style={{ background: 'none', border: '1px solid #ddd', color: '#666', cursor: 'pointer' }}
+          >
+            Выйти
+          </button>
         </nav>
       </header>
 
