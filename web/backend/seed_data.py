@@ -30,19 +30,30 @@ def create_tables():
     # Таблица профилей
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS profiles (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER UNIQUE NOT NULL,
+            user_id INTEGER PRIMARY KEY,
             full_name TEXT,
+            age INTEGER,
+            gender TEXT,
             occupation TEXT,
-            budget REAL,
-            preferred_district TEXT,
-            cleanliness INTEGER,
-            noise_level INTEGER,
-            schedule_type INTEGER,
-            social_habits INTEGER,
-            about TEXT,
-            personality TEXT,
-            smoking_habits TEXT,
+            contact_info TEXT,
+            photo_path TEXT,
+            budget_min INTEGER DEFAULT 5000,
+            budget_max INTEGER DEFAULT 50000,
+            preferred_districts TEXT,
+            housing_type TEXT,
+            rental_period TEXT,
+            daily_schedule TEXT,
+            cleanliness_level INTEGER DEFAULT 5,
+            noise_tolerance INTEGER DEFAULT 5,
+            smoking INTEGER DEFAULT 0,
+            alcohol INTEGER DEFAULT 0,
+            personality_type INTEGER DEFAULT 5,
+            hobbies TEXT,
+            has_pets INTEGER DEFAULT 0,
+            preferred_neighbor_gender TEXT,
+            neighbor_age_min INTEGER DEFAULT 18,
+            neighbor_age_max INTEGER DEFAULT 60,
+            important_criteria TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     """)
@@ -131,28 +142,28 @@ def seed_database():
     # 2. Создаем профили с разными характеристиками для проверки алгоритмов
     profiles_data = [
         # Alice: Чистюля, ранний подъем, бюджет 50к, Центр
-        (user_ids["alice"], "Алиса, 23", "Студентка", "", 50000, 5000, [], "", "", "", 5, 5, False, False, 1, [], False, "", 18, 60, []),
+        (user_ids["alice"], "Алиса, 23", 23, "female", "Студентка", "", "", 5000, 50000, [], "", "", "", 5, 5, False, False, 1, [], False, "", 18, 60, []),
         # Bob: Спокойный, бюджет 50к, Центр (Мэтч с Алисой)
-        (user_ids["bob"], "Борис, 24", "Разработчик", "", 55000, 5000, [], "", "", "", 4, 4, False, False, 2, [], False, "", 18, 60, []),
+        (user_ids["bob"], "Борис, 24", 24, "male", "Разработчик", "", "", 5000, 55000, [], "", "", "", 4, 4, False, False, 2, [], False, "", 18, 60, []),
         # Charlie: Тусовщик, шумный, бюджет 30к, Север (Не мэтч с Алисой)
-        (user_ids["charlie"], "Чарли, 22", "Музыкант", "", 30000, 5000, [], "", "", "", 2, 1, False, False, 5, [], False, "", 18, 60, []),
+        (user_ids["charlie"], "Чарли, 22", 22, "male", "Музыкант", "", "", 5000, 30000, [], "", "", "", 2, 1, False, False, 5, [], False, "", 18, 60, []),
         # Diana: Умеренная, бюджет 40к, Юг
-        (user_ids["diana"], "Диана, 25", "Дизайнер", "", 40000, 5000, [], "", "", "", 3, 3, False, False, 3, [], False, "", 18, 60, []),
+        (user_ids["diana"], "Диана, 25", 25, "female", "Дизайнер", "", "", 5000, 40000, [], "", "", "", 3, 3, False, False, 3, [], False, "", 18, 60, []),
         # Eve: Чистюля, бюджет 60к, Запад (Потенциальный мэтч с Алисой)
-        (user_ids["eve"], "Ева, 23", "Маркетолог", "", 60000, 5000, [], "", "", "", 5, 4, False, False, 2, [], False, "", 18, 60, []),
+        (user_ids["eve"], "Ева, 23", 23, "female", "Маркетолог", "", "", 5000, 60000, [], "", "", "", 5, 4, False, False, 2, [], False, "", 18, 60, []),
         # Frank: Бюджетник, любой район
-        (user_ids["frank"], "Франк, 21", "Студент", "", 25000, 5000, [], "", "", "", 2, 2, False, False, 4, [], False, "", 18, 60, []),
+        (user_ids["frank"], "Франк, 21", 21, "male", "Студент", "", "", 5000, 25000, [], "", "", "", 2, 2, False, False, 4, [], False, "", 18, 60, []),
     ]
 
     profile_ids = {}
     for data in profiles_data:
         uid = data[0]
         cursor.execute("""
-            INSERT OR REPLACE INTO profiles (user_id, full_name, occupation, contact_info, budget_max, budget_min, 
-            preferred_districts, housing_type, rental_period, daily_schedule, cleanliness_level, noise_tolerance, 
-            smoking, alcohol, personality_type, hobbies, has_pets, preferred_neighbor_gender, 
-            neighbor_age_min, neighbor_age_max, important_criteria)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT OR REPLACE INTO profiles (user_id, full_name, age, gender, occupation, contact_info, photo_path, 
+            budget_min, budget_max, preferred_districts, housing_type, rental_period, daily_schedule, 
+            cleanliness_level, noise_tolerance, smoking, alcohol, personality_type, hobbies, 
+            has_pets, preferred_neighbor_gender, neighbor_age_min, neighbor_age_max, important_criteria)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, data)
         profile_ids[uid] = cursor.lastrowid
 
