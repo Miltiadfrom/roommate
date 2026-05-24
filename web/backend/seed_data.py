@@ -15,15 +15,15 @@ def create_tables():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
-    # Таблица пользователей
+    # Таблица пользователей (используем phone как логин)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
+            phone TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
-            status TEXT DEFAULT 'active',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            is_active INTEGER DEFAULT 1,
+            is_admin INTEGER DEFAULT 0
         )
     """)
     
@@ -131,26 +131,28 @@ def seed_database():
     # 2. Создаем профили с разными характеристиками для проверки алгоритмов
     profiles_data = [
         # Alice: Чистюля, ранний подъем, бюджет 50к, Центр
-        (user_ids["alice"], "Алиса, 23", "Студентка", 50000, "Центральный", 5, 5, 1, 1, "Люблю порядок и тишину. Ложусь в 22:00.", "introvert", "non-smoker"),
+        (user_ids["alice"], "Алиса, 23", "Студентка", "", 50000, 5000, [], "", "", "", 5, 5, False, False, 1, [], False, "", 18, 60, []),
         # Bob: Спокойный, бюджет 50к, Центр (Мэтч с Алисой)
-        (user_ids["bob"], "Борис, 24", "Разработчик", 55000, "Центральный", 4, 4, 2, 2, "Работаю из дома, ценю уют.", "ambivert", "non-smoker"),
+        (user_ids["bob"], "Борис, 24", "Разработчик", "", 55000, 5000, [], "", "", "", 4, 4, False, False, 2, [], False, "", 18, 60, []),
         # Charlie: Тусовщик, шумный, бюджет 30к, Север (Не мэтч с Алисой)
-        (user_ids["charlie"], "Чарли, 22", "Музыкант", 30000, "Северный", 2, 1, 5, 5, "Люблю вечеринки и гостей. Ложусь под утро.", "extrovert", "smoker"),
+        (user_ids["charlie"], "Чарли, 22", "Музыкант", "", 30000, 5000, [], "", "", "", 2, 1, False, False, 5, [], False, "", 18, 60, []),
         # Diana: Умеренная, бюджет 40к, Юг
-        (user_ids["diana"], "Диана, 25", "Дизайнер", 40000, "Южный", 3, 3, 3, 3, "Ищу спокойных соседей.", "ambivert", "non-smoker"),
+        (user_ids["diana"], "Диана, 25", "Дизайнер", "", 40000, 5000, [], "", "", "", 3, 3, False, False, 3, [], False, "", 18, 60, []),
         # Eve: Чистюля, бюджет 60к, Запад (Потенциальный мэтч с Алисой)
-        (user_ids["eve"], "Ева, 23", "Маркетолог", 60000, "Западный", 5, 4, 2, 2, "Чистота - залог здоровья.", "introvert", "non-smoker"),
+        (user_ids["eve"], "Ева, 23", "Маркетолог", "", 60000, 5000, [], "", "", "", 5, 4, False, False, 2, [], False, "", 18, 60, []),
         # Frank: Бюджетник, любой район
-        (user_ids["frank"], "Франк, 21", "Студент", 25000, "Любой", 2, 2, 4, 4, "Неприхотливый в быту.", "extrovert", "social-smoker"),
+        (user_ids["frank"], "Франк, 21", "Студент", "", 25000, 5000, [], "", "", "", 2, 2, False, False, 4, [], False, "", 18, 60, []),
     ]
 
     profile_ids = {}
     for data in profiles_data:
         uid = data[0]
         cursor.execute("""
-            INSERT INTO profiles (user_id, full_name, occupation, budget, preferred_district, 
-            cleanliness, noise_level, schedule_type, social_habits, about, personality, smoking_habits)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT OR REPLACE INTO profiles (user_id, full_name, occupation, contact_info, budget_max, budget_min, 
+            preferred_districts, housing_type, rental_period, daily_schedule, cleanliness_level, noise_tolerance, 
+            smoking, alcohol, personality_type, hobbies, has_pets, preferred_neighbor_gender, 
+            neighbor_age_min, neighbor_age_max, important_criteria)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, data)
         profile_ids[uid] = cursor.lastrowid
 
