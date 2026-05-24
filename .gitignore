@@ -1,31 +1,48 @@
 ```
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Database
-*.db
-
-# Dependencies
-node_modules/
-venv/
-.venv/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # Environment
-.env
-.env.local
-*.env.*
+.venv/
+venv/
+env/
+ENV/
 
-# Editors
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
 # Logs
 *.log
 
-# Temporary files
-*.tmp
-*.swp
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+.coverage
+htmlcov/
+.coverage.*
+coverage.xml
 ```
